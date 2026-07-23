@@ -27,6 +27,33 @@ pipeline {
                 sh 'mvn clean package'
             }
         }
+        stage('Docker Build the Image') {
+            steps {
+                echo "Building the Docker image..."
+                sh 'sudo docker build -t beach-cicd-docker .'
+            }
+            post {
+                success {
+                    echo 'Docker image built successfully.'
+                }
+                failure {
+                    echo 'Docker image build failed.'
+                }
+            }
+        }
+        stage('Docker Login to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-cred-id',  
+                    usernameVariable: 'USER',
+                    passwordVariable: 'PASS'
+                )]) {
+                    sh '''
+                        echo "$PASS" | sudo docker login -u "$USER" --password-stdin
+                    '''
+                }
+            }
+        }
          stage('Docker Tag the Image') {
             steps {
                 echo "Tagging the Docker image..."
