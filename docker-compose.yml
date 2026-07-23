@@ -1,48 +1,67 @@
+version: "3.8"
+
 services:
 
-  mysql-container:
+  db:
     image: mysql:8.0
-    container_name: mysql-container
+    container_name: app_mysql
+    restart: always
 
     environment:
-      MYSQL_ROOT_PASSWORD: 1234
-      MYSQL_DATABASE: myapplication
-
-    ports:
-      - "3306:3306"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
 
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - db_data:/var/lib/mysql
 
     networks:
-      - springboot-mysql-network
+      - app_network
 
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1234"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    mem_limit: 1g
 
-  springboot-app:
-    build: .
-    container_name: springboot-app
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-    ports:
-      - "8085:8085"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: app_image:latest
+    container_name: app_container
 
     depends_on:
-      mysql-container:
-        condition: service_healthy
+      - db
+
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
 
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-container:3306/myapplication?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
       SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root1234
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    restart: always
 
     networks:
-      - springboot-mysql-network
+      - app_network
+
+    mem_limit: 700m
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+volumes:
+  db_data:
 
 networks:
-  springboot-mysql-network:
-    name: springboot-mysql-network
+  app_network:
+    driver: bridge
