@@ -30,7 +30,7 @@ pipeline {
          stage('Docker Tag the Image') {
             steps {
                 echo "Tagging the Docker image..."
-                sh 'sudo docker tag beach-cicd-docker anuu15/beach-cicd-docker:latest'
+                sh 'sudo docker tag movie-cicd-docker anuu15/movie-cicd-docker:latest'
             }
             post {
                 success {
@@ -44,7 +44,7 @@ pipeline {
         stage('Docker Push the Image') {
             steps {
                 echo "Pushing the Docker image to DockerHub..."
-                sh 'sudo docker push anuu15/beach-cicd-docker:latest'
+                sh 'sudo docker push anuu15/movie-cicd-docker:latest'
             }
             post {
                 success {
@@ -59,8 +59,8 @@ pipeline {
             steps {
                 echo "Cleaning up local Docker images..."
                 sh '''
-                    sudo docker rmi anuu15/beach-cicd-docker:latest
-                    sudo docker rmi beach-cicd-docker
+                    sudo docker rmi anuu15/movie-cicd-docker:latest
+                    sudo docker rmi movie-cicd-docker
                 '''
             }
             post {
